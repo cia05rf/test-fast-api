@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "test-fast-api"
+version = "0.1.0"
+description = "a test for a fast api web app to run on azure"
+authors = ["robert.franklin <robert.franklin@boots.co.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.109.0"
+opencensus-ext-azure = "^1.1.13"
+opencensus = "^0.11.4"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.0"
+autopep8 = "^2.0.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
