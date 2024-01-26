@@ -95,6 +95,7 @@ async def read_products(data: ProductData, request: Request):
     product_api_target_type = os.environ.get('product_api_target_type')
     null_value_error = os.environ.get('null_value_error')
     mock_url = os.environ.get('mock_url')
+    dev_url = os.environ.get('dev_url')
     live_url = os.environ.get('live_url')
     try:
         logger.info("**Data Received from UI**")
@@ -118,6 +119,8 @@ async def read_products(data: ProductData, request: Request):
 
     if product_api_target_type == "mock":
         url = mock_url
+    elif product_api_target_type == "dev":
+        url = dev_url
     else:
         url = live_url
 

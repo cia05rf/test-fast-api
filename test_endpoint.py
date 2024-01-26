@@ -10,7 +10,7 @@ async def fetch(session, url):
         return await response.text()  # or response.json() depending on your API response
 
 async def main():
-    urls = ["https://test-fast-api.azurewebsites.net/hello"] * 50
+    urls = ["https://test-fast-api.azurewebsites.net/"] * 50
 
     async with aiohttp.ClientSession() as session:
         tasks = []
