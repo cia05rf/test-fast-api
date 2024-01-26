@@ -15,6 +15,8 @@ from opencensus.trace import config_integration
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 app = FastAPI()
+from dotenv import load_dotenv # TEMP
+load_dotenv("final.env") # TEMP
 
 class ProductData(BaseModel):
     """
@@ -23,6 +25,7 @@ class ProductData(BaseModel):
     message: str
     conversationId: str
     messageId: str
+    metadata: dict = None # Optional
 
 class FeedbackData(BaseModel):
     """
@@ -53,7 +56,6 @@ async def add_process_time_header(request: Request, call_next):
         response = await call_next(request)
     return response
 
-
 @app.get("/welcome")
 def welcome_page():
    
@@ -70,8 +72,8 @@ async def read_products(data: ProductData, request: Request):
         
             "message": "Any string message. For e.g: Make my teeth shine please",
             "conversationId": "Hash value. For e.g: 2234567890123456789f3f66",
-            "messageId": "Hash value. For e.g: 2234567890123456789f3f66"
-            
+            "messageId": "Hash value. For e.g: 2234567890123456789f3f66",
+            "metadata": {"foo": "bar"}
         }
         ```
     - Returns:
@@ -83,9 +85,7 @@ async def read_products(data: ProductData, request: Request):
                 "messageId": "Hash value. For e.g: 2234567890123456789f3f66",
                 "timestamp": "2023-10-06T13:11:47.877745",
                 "message": "String message",
-                "products": [
-                        {}
-                ]
+                "products": [{}]
             
         }
         ```
@@ -103,6 +103,7 @@ async def read_products(data: ProductData, request: Request):
         message = data.message.strip()
         conversationId = data.conversationId.strip()
         messageId = data.messageId.strip()
+        metadata = data.metadata
         timestamp = str(datetime.now())
         # Remove special characters from message
         # message = re.sub(r'[^a-zA-Z0-9\s]', '', message)
@@ -116,6 +117,8 @@ async def read_products(data: ProductData, request: Request):
         return {"Error": null_value_error, "StatusCode": "400"}
     if (messageId is None) or (messageId == ""):
         return {"Error": null_value_error, "StatusCode": "400"}
+    if (metadata is None) or (metadata == ""):
+        metadata = None
 
     if product_api_target_type == "mock":
         url = mock_url
@@ -137,7 +140,8 @@ async def read_products(data: ProductData, request: Request):
                 "message": [message],
                 "conversationId": [conversationId],
                 "messageId": [messageId],
-                "timestamp": [timestamp]
+                "timestamp": [timestamp],
+                "metadata": [metadata]
             }
         }
         raw_data = json.dumps(data, indent=4)
