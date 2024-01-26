@@ -15,8 +15,6 @@ from opencensus.trace import config_integration
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 app = FastAPI()
-from dotenv import load_dotenv # TEMP
-load_dotenv("final.env") # TEMP
 
 class ProductData(BaseModel):
     """
@@ -151,9 +149,9 @@ async def read_products(data: ProductData, request: Request):
         x = requests.post(url, data=raw_data, headers=headers, verify=True)
         json_data = x.json()
         logger.info(f"Response from Conversation-Api: {x}")
-      
+        resp = json_data['predictions'][0]
     except Exception as e:
         logger.info(f"Exception: {e}")
         return {"Error": os.environ.get('internal_server_err_message'), "StatusCode": "500"}
 
-    return json_data['predictions'][0]
+    return resp
