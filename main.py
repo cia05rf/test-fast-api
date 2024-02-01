@@ -125,17 +125,17 @@ async def read_products(data: ProductData, request: Request):
         # Remove special characters from message
         # message = re.sub(r'[^a-zA-Z0-9\s]', '', message)
     except Exception as e:
-        logger.info(f"{req_id} - Exception: {e}")
+        logger.error(f"{req_id} - Exception: creating variables - {e}")
         return {"Error": os.environ.get('invalid_json_message'), "StatusCode": "400"}
 
     if (message is None) or (message == ""):
-        logger.info(f"{req_id} - Exception: {null_value_error}")
+        logger.error(f"{req_id} - Exception: message null value error")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (conversationId is None) or (conversationId == ""):
-        logger.info(f"{req_id} - Exception: {null_value_error}")
+        logger.error(f"{req_id} - Exception: conversationId null value error")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (messageId is None) or (messageId == ""):
-        logger.info(f"{req_id} - Exception: {null_value_error}")
+        logger.error(f"{req_id} - Exception: messageId null value error")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (metadata is None) or (metadata == ""):
         metadata = None
@@ -175,7 +175,7 @@ async def read_products(data: ProductData, request: Request):
             json_data = response.json()
         resp = json_data['predictions'][0]
     except Exception as e:
-        logger.info(f"{req_id} - Exception: {e}")
+        logger.error(f"{req_id} - Exception: {e}")
         raise HTTPException(status_code=500, detail="Error whilst contacting completion service")
 
     return {"received": timestamp} | resp

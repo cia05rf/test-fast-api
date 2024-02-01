@@ -13,13 +13,12 @@ data = {
 }
 
 async def fetch(session, url):
-    st_time = str(datetime.now())
     async with session.post(url, json=data) as response:
-        return st_time, await response.text(), response.status  # or response.json() depending on your API response
+        return await response.text(), response.status  # or response.json() depending on your API response
 
 summary = {}
 async def main():
-    urls = ["https://test-fast-api.azurewebsites.net/product-conversation"] * 5
+    urls = ["https://test-fast-api.azurewebsites.net/product-conversation"] * 50
     # urls = ["https://prod-productgpt-as-01.azurewebsites.net/product-conversation"] * 1
 
     async with aiohttp.ClientSession() as session:
@@ -31,8 +30,8 @@ async def main():
             await asyncio.sleep(2)  # Wait for 2 second before scheduling the next task
         
         responses = await asyncio.gather(*tasks)
-        for st_time, response, status in responses:
-            print(st_time, response, status)
+        for response, status in responses:
+            print(response, status)
             summary[status] = summary.get(status, 0) + 1
         print(summary)
 
