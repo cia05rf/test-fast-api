@@ -1,10 +1,9 @@
 import os
 import requests
 import json
-import re
+import asyncio
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
-from azure.storage.blob import BlobServiceClient, ContentSettings
 from datetime import datetime
 import logging
 from opencensus.ext.azure.trace_exporter import AzureExporter
@@ -50,14 +49,23 @@ async def add_process_time_header(request: Request, call_next):
     tracer = Tracer(exporter=AzureExporter(connection_string=f'InstrumentationKey={APPINSIGHTS_INSTRUMENTATIONKEY}'),sampler=ProbabilitySampler(1.0))
     with tracer.span("main") as span:
         span.span_kind = SpanKind.SERVER
-        logger.info("**request received in middleware**")
+        # Assigning the request id to the span id
+        span.span_id = request.headers.get("x-request-id")
+        logger.info(span.span_id, "**request received in middleware**")
         response = await call_next(request)
     return response
 
 @app.get("/welcome")
 def welcome_page():
-   
     return "Welcome to productGPT"
+
+
+@app.get("/hello")
+async def hello():
+    logger.info("Processing request for /hello")
+    await asyncio.sleep(5)
+    logger.info("Request processed")
+    return {"message": "hello world"}
       
 
 @app.post("/product-conversation")
@@ -96,7 +104,7 @@ async def read_products(data: ProductData, request: Request):
     dev_url = os.environ.get('dev_url')
     live_url = os.environ.get('live_url')
     try:
-        logger.info("**Data Received from UI**")
+        logger.info(request.headers.get("x-request-id"), "**Data Received from UI**")
         access_token = os.environ.get('access_token')
         message = data.message.strip()
         conversationId = data.conversationId.strip()
@@ -106,14 +114,17 @@ async def read_products(data: ProductData, request: Request):
         # Remove special characters from message
         # message = re.sub(r'[^a-zA-Z0-9\s]', '', message)
     except Exception as e:
-        logger.info(f"Exception: {e}")
+        logger.info(request.headers.get("x-request-id"), f"Exception: {e}")
         return {"Error": os.environ.get('invalid_json_message'), "StatusCode": "400"}
 
     if (message is None) or (message == ""):
+        logger.info(request.headers.get("x-request-id"), f"Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (conversationId is None) or (conversationId == ""):
+        logger.info(request.headers.get("x-request-id"), f"Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (messageId is None) or (messageId == ""):
+        logger.info(request.headers.get("x-request-id"), f"Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (metadata is None) or (metadata == ""):
         metadata = None
@@ -143,15 +154,15 @@ async def read_products(data: ProductData, request: Request):
             }
         }
         raw_data = json.dumps(data, indent=4)
-        logger.info("**Data sent to Conversation-Api**")
         #return {"data": raw_data, "url" : url, "headers": headers}
+        logger.info(request.headers.get("x-request-id"), "**Data sent to Conversation-Api**")
         #Doing internal request
         x = requests.post(url, data=raw_data, headers=headers, verify=True)
         json_data = x.json()
-        logger.info(f"Response from Conversation-Api: {x}")
+        logger.info(request.headers.get("x-request-id"), f"Response from Conversation-Api: {x}")
         resp = json_data['predictions'][0]
     except Exception as e:
-        logger.info(f"Exception: {e}")
+        logger.info(request.headers.get("x-request-id"), f"Exception: {e}")
         return {"Error": os.environ.get('internal_server_err_message'), "StatusCode": "500"}
 
     return resp

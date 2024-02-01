@@ -5,17 +5,23 @@ import nest_asyncio
 # Apply nest_asyncio
 nest_asyncio.apply()
 
+data = {
+    "conversationId": "test",
+    "messageId": "test",
+    "message": "i have a headache"
+}
+
 async def fetch(session, url):
-    async with session.get(url) as response:
+    async with session.post(url, json=data) as response:
         return await response.text()  # or response.json() depending on your API response
 
 async def main():
-    urls = ["https://test-fast-api.azurewebsites.net/"] * 50
+    urls = ["https://test-fast-api.azurewebsites.net/product-conversation"] * 50
 
     async with aiohttp.ClientSession() as session:
         tasks = []
         for i, url in enumerate(urls):
-            print("GET", i)
+            print("POST", i)
             task = asyncio.create_task(fetch(session, url))
             tasks.append(task)
             await asyncio.sleep(1)  # Wait for 1 second before scheduling the next task
