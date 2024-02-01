@@ -167,7 +167,7 @@ async def read_products(data: ProductData, request: Request):
         async with httpx.AsyncClient() as client:
             response = await client.post(url, data=raw_data, headers=headers, verify=True)
             json_data = response.json()
-        logger.info(f"{req_id} - Response from Conversation-Api: {x}")
+            logger.info(f"{req_id} - Response from Conversation-Api: {response}")
         resp = json_data['predictions'][0]
     except Exception as e:
         logger.error(f"{req_id} - Exception: {e}")
