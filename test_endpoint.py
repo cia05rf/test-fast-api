@@ -15,6 +15,7 @@ async def fetch(session, url):
     async with session.post(url, json=data) as response:
         return await response.text(), response.status  # or response.json() depending on your API response
 
+summary = {}
 async def main():
     urls = ["https://test-fast-api.azurewebsites.net/product-conversation"] * 50
 
@@ -27,8 +28,10 @@ async def main():
             await asyncio.sleep(1)  # Wait for 1 second before scheduling the next task
         
         responses = await asyncio.gather(*tasks)
-        for response in responses:
+        for response, status in responses:
             print(response)
+            summary[status] = summary.get(status, 0) + 1
+        print(summary)
 
 # Run the main function in an asyncio event loop
 asyncio.run(main())

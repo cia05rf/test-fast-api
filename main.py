@@ -2,7 +2,7 @@ import os
 import requests
 import json
 import asyncio
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
 from httpx import AsyncClient, Timeout
@@ -168,7 +168,7 @@ async def read_products(data: ProductData, request: Request):
         #return {"data": raw_data, "url" : url, "headers": headers}
         logger.info(f"{req_id} - **Data sent to Conversation-Api**")
         # Doing internal request asynchronously
-        timeout = Timeout(30.0, connect=60.0)  # 10 seconds read timeout, 60 seconds connect timeout
+        timeout = Timeout(120, connect=130)  # 120 seconds read timeout, 130 seconds connect timeout
         async with AsyncClient(timeout=timeout) as client:
             response = await client.post(url, data=raw_data, headers=headers)
             logger.info(f"{req_id} - Response from Conversation-Api: {response}")
@@ -176,6 +176,6 @@ async def read_products(data: ProductData, request: Request):
         resp = json_data['predictions'][0]
     except Exception as e:
         logger.info(f"{req_id} - Exception: {e}")
-        return {"Error": e, "StatusCode": "500"}
+        raise HTTPException(status_code=500, detail="Error whilst contacting completion service")
 
     return resp
