@@ -5,7 +5,7 @@ import asyncio
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from datetime import datetime
-import httpx
+from httpx import AsyncClient, Timeout
 import logging
 import random
 from opencensus.ext.azure.trace_exporter import AzureExporter
@@ -125,17 +125,17 @@ async def read_products(data: ProductData, request: Request):
         # Remove special characters from message
         # message = re.sub(r'[^a-zA-Z0-9\s]', '', message)
     except Exception as e:
-        logger.error(f"{req_id} - Exception: {e}")
+        logger.info(f"{req_id} - Exception: {e}")
         return {"Error": os.environ.get('invalid_json_message'), "StatusCode": "400"}
 
     if (message is None) or (message == ""):
-        logger.error(f"{req_id} - Exception: {null_value_error}")
+        logger.info(f"{req_id} - Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (conversationId is None) or (conversationId == ""):
-        logger.error(f"{req_id} - Exception: {null_value_error}")
+        logger.info(f"{req_id} - Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (messageId is None) or (messageId == ""):
-        logger.error(f"{req_id} - Exception: {null_value_error}")
+        logger.info(f"{req_id} - Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (metadata is None) or (metadata == ""):
         metadata = None
@@ -168,13 +168,14 @@ async def read_products(data: ProductData, request: Request):
         #return {"data": raw_data, "url" : url, "headers": headers}
         logger.info(f"{req_id} - **Data sent to Conversation-Api**")
         # Doing internal request asynchronously
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, data=raw_data, headers=headers, verify=True)
-            json_data = response.json()
+        timeout = Timeout(30.0, connect=60.0)  # 10 seconds read timeout, 60 seconds connect timeout
+        async with AsyncClient(timeout=timeout) as client:
+            response = await client.post(url, data=raw_data, headers=headers)
             logger.info(f"{req_id} - Response from Conversation-Api: {response}")
+            json_data = response.json()
         resp = json_data['predictions'][0]
     except Exception as e:
-        logger.error(f"{req_id} - Exception: {e}")
+        logger.info(f"{req_id} - Exception: {e}")
         return {"Error": e, "StatusCode": "500"}
 
     return resp
