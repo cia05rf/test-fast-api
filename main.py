@@ -6,12 +6,18 @@ from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from datetime import datetime
 import logging
+import random
 from opencensus.ext.azure.trace_exporter import AzureExporter
 from opencensus.trace.samplers import ProbabilitySampler
 from opencensus.trace.tracer import Tracer
 from opencensus.trace.span import SpanKind
 from opencensus.trace import config_integration
 from opencensus.ext.azure.log_exporter import AzureLogHandler
+import string
+
+def generate_random_id(length=8):
+    # Generate a random string of upper and lower case characters, and digits
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
 app = FastAPI()
 
@@ -96,7 +102,7 @@ async def read_products(data: ProductData, request: Request):
         }
         ```
     """
-    req_id = request.headers.get("x-request-id")
+    req_id = generate_random_id()
     # Declaring Variables
     product_api_target_type = os.environ.get('product_api_target_type')
     null_value_error = os.environ.get('null_value_error')
