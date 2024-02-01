@@ -62,6 +62,10 @@ async def add_process_time_header(request: Request, call_next):
         response = await call_next(request)
     return response
 
+@app.get("/")
+def index():
+    return {"hello": "world"}
+
 @app.get("/welcome")
 def welcome_page():
     return "Welcome to productGPT"
@@ -171,6 +175,6 @@ async def read_products(data: ProductData, request: Request):
         resp = json_data['predictions'][0]
     except Exception as e:
         logger.error(f"{req_id} - Exception: {e}")
-        return {"Error": os.environ.get('internal_server_err_message'), "StatusCode": "500"}
+        return {"Error": e, "StatusCode": "500"}
 
     return resp
