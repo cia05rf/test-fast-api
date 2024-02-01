@@ -5,6 +5,7 @@ import asyncio
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from datetime import datetime
+import httpx
 import logging
 import random
 from opencensus.ext.azure.trace_exporter import AzureExporter
@@ -162,9 +163,10 @@ async def read_products(data: ProductData, request: Request):
         raw_data = json.dumps(data, indent=4)
         #return {"data": raw_data, "url" : url, "headers": headers}
         logger.info(f"{req_id} - **Data sent to Conversation-Api**")
-        #Doing internal request
-        x = requests.post(url, data=raw_data, headers=headers, verify=True)
-        json_data = x.json()
+        # Doing internal request asynchronously
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, data=raw_data, headers=headers, verify=True)
+            json_data = response.json()
         logger.info(f"{req_id} - Response from Conversation-Api: {x}")
         resp = json_data['predictions'][0]
     except Exception as e:
