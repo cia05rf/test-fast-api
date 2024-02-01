@@ -96,7 +96,7 @@ async def read_products(data: ProductData, request: Request):
         }
         ```
     """
-
+    req_id = request.headers.get("x-request-id")
     # Declaring Variables
     product_api_target_type = os.environ.get('product_api_target_type')
     null_value_error = os.environ.get('null_value_error')
@@ -104,7 +104,7 @@ async def read_products(data: ProductData, request: Request):
     dev_url = os.environ.get('dev_url')
     live_url = os.environ.get('live_url')
     try:
-        logger.info(request.headers.get("x-request-id"), "**Data Received from UI**")
+        logger.info(f"{req_id} - **Data Received from UI**")
         access_token = os.environ.get('access_token')
         message = data.message.strip()
         conversationId = data.conversationId.strip()
@@ -114,17 +114,17 @@ async def read_products(data: ProductData, request: Request):
         # Remove special characters from message
         # message = re.sub(r'[^a-zA-Z0-9\s]', '', message)
     except Exception as e:
-        logger.info(request.headers.get("x-request-id"), f"Exception: {e}")
+        logger.error(f"{req_id} - Exception: {e}")
         return {"Error": os.environ.get('invalid_json_message'), "StatusCode": "400"}
 
     if (message is None) or (message == ""):
-        logger.info(request.headers.get("x-request-id"), f"Exception: {null_value_error}")
+        logger.error(f"{req_id} - Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (conversationId is None) or (conversationId == ""):
-        logger.info(request.headers.get("x-request-id"), f"Exception: {null_value_error}")
+        logger.error(f"{req_id} - Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (messageId is None) or (messageId == ""):
-        logger.info(request.headers.get("x-request-id"), f"Exception: {null_value_error}")
+        logger.error(f"{req_id} - Exception: {null_value_error}")
         return {"Error": null_value_error, "StatusCode": "400"}
     if (metadata is None) or (metadata == ""):
         metadata = None
@@ -155,14 +155,14 @@ async def read_products(data: ProductData, request: Request):
         }
         raw_data = json.dumps(data, indent=4)
         #return {"data": raw_data, "url" : url, "headers": headers}
-        logger.info(request.headers.get("x-request-id"), "**Data sent to Conversation-Api**")
+        logger.info(f"{req_id} - **Data sent to Conversation-Api**")
         #Doing internal request
         x = requests.post(url, data=raw_data, headers=headers, verify=True)
         json_data = x.json()
-        logger.info(request.headers.get("x-request-id"), f"Response from Conversation-Api: {x}")
+        logger.info(f"{req_id} - Response from Conversation-Api: {x}")
         resp = json_data['predictions'][0]
     except Exception as e:
-        logger.info(request.headers.get("x-request-id"), f"Exception: {e}")
+        logger.error(f"{req_id} - Exception: {e}")
         return {"Error": os.environ.get('internal_server_err_message'), "StatusCode": "500"}
 
     return resp

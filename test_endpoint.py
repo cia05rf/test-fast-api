@@ -13,7 +13,7 @@ data = {
 
 async def fetch(session, url):
     async with session.post(url, json=data) as response:
-        return await response.text()  # or response.json() depending on your API response
+        return await response.text(), response.status  # or response.json() depending on your API response
 
 async def main():
     urls = ["https://test-fast-api.azurewebsites.net/product-conversation"] * 50
