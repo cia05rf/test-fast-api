@@ -178,4 +178,4 @@ async def read_products(data: ProductData, request: Request):
         logger.info(f"{req_id} - Exception: {e}")
         raise HTTPException(status_code=500, detail="Error whilst contacting completion service")
 
-    return resp
+    return {"received": timestamp} | resp
