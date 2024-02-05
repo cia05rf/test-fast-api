@@ -187,6 +187,6 @@ async def read_products(data: ProductData, request: Request):
         tb_str = traceback.format_exc()
         logger.error(f"{req_id} - Exception: contacting completion service - {e} - {tb_str}")
         act_log.append(f"{req_id} - Exception: contacting completion service - {e} - {tb_str}")
-        # raise HTTPException(status_code=500, detail="Error whilst contacting completion service")
+        raise HTTPException(status_code=500, detail="Error whilst contacting completion service")
 
     return {"received": timestamp} | resp | {"ActLog": act_log}
