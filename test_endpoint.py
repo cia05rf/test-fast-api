@@ -14,7 +14,8 @@ def generate_random_id(length=8):
 LOAD = "50%"
 N = 50
 PLATFORM = "fastapi"
-URL = "https://test-fast-api.azurewebsites.net/product-conversation"
+# URL = "https://test-fast-api.azurewebsites.net/product-conversation"
+URL = "https://productgpt.boots.com/product-conversation"
 # URL = "https://prod-productgpt-as-01.azurewebsites.net/product-conversation"
 # URL = "https://adb-5427387077664746.6.azuredatabricks.net/serving-endpoints/product_gpt_ep_dev/invocations"
 
