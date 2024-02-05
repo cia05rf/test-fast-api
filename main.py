@@ -15,6 +15,8 @@ from opencensus.trace.span import SpanKind
 from opencensus.trace import config_integration
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 import string
+import traceback
+
 
 def generate_random_id(length=8):
     # Generate a random string of upper and lower case characters, and digits
@@ -108,6 +110,8 @@ async def read_products(data: ProductData, request: Request):
         ```
     """
     req_id = generate_random_id()
+    act_log = []
+    timestamp = str(datetime.now())
     # Declaring Variables
     product_api_target_type = os.environ.get('product_api_target_type')
     null_value_error = os.environ.get('null_value_error')
@@ -116,27 +120,30 @@ async def read_products(data: ProductData, request: Request):
     live_url = os.environ.get('live_url')
     try:
         logger.info(f"{req_id} - **Data Received from UI**")
+        act_log.append(f"{req_id} - **Data Received from UI**")
         access_token = os.environ.get('access_token')
         message = data.message.strip()
         conversationId = data.conversationId.strip()
         messageId = data.messageId.strip()
         metadata = data.metadata
-        timestamp = str(datetime.now())
         # Remove special characters from message
         # message = re.sub(r'[^a-zA-Z0-9\s]', '', message)
     except Exception as e:
         logger.error(f"{req_id} - Exception: creating variables - {e}")
-        return {"Error": os.environ.get('invalid_json_message'), "StatusCode": "400"}
-
+        act_log.append(f"{req_id} - Exception: creating variables - {e}")
+        return {"Error": os.environ.get('invalid_json_message'), "StatusCode": "400", "ActLog": act_log}
     if (message is None) or (message == ""):
         logger.error(f"{req_id} - Exception: message null value error")
-        return {"Error": null_value_error, "StatusCode": "400"}
+        act_log.append(f"{req_id} - Exception: message null value error")
+        return {"Error": null_value_error, "StatusCode": "400", "ActLog": act_log}
     if (conversationId is None) or (conversationId == ""):
         logger.error(f"{req_id} - Exception: conversationId null value error")
-        return {"Error": null_value_error, "StatusCode": "400"}
+        act_log.append(f"{req_id} - Exception: conversationId null value error")
+        return {"Error": null_value_error, "StatusCode": "400", "ActLog": act_log}
     if (messageId is None) or (messageId == ""):
         logger.error(f"{req_id} - Exception: messageId null value error")
-        return {"Error": null_value_error, "StatusCode": "400"}
+        act_log.append(f"{req_id} - Exception: messageId null value error")
+        return {"Error": null_value_error, "StatusCode": "400", "ActLog": act_log}
     if (metadata is None) or (metadata == ""):
         metadata = None
 
@@ -167,15 +174,19 @@ async def read_products(data: ProductData, request: Request):
         raw_data = json.dumps(data, indent=4)
         #return {"data": raw_data, "url" : url, "headers": headers}
         logger.info(f"{req_id} - **Data sent to Conversation-Api**")
+        act_log.append(f"{req_id} - **Data sent to Conversation-Api**")
         # Doing internal request asynchronously
         timeout = Timeout(120, connect=130)  # 120 seconds read timeout, 130 seconds connect timeout
         async with AsyncClient(timeout=timeout) as client:
             response = await client.post(url, data=raw_data, headers=headers)
             logger.info(f"{req_id} - Response from Conversation-Api: {response}")
+            act_log.append(f"{req_id} - Response from Conversation-Api: {response}")
             json_data = response.json()
         resp = json_data['predictions'][0]
     except Exception as e:
-        logger.error(f"{req_id} - Exception: {e}")
+        tb_str = traceback.format_exc()
+        logger.error(f"{req_id} - Exception: contacting completion service - {e} - {tb_str}")
+        act_log.append(f"{req_id} - Exception: contacting completion service - {e} - {tb_str}")
         raise HTTPException(status_code=500, detail="Error whilst contacting completion service")
 
-    return {"received": timestamp} | resp
+    return {"received": timestamp} | resp | {"ActLog": act_log}
